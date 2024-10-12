@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "tailored-resume-assistant-backend"
+version = "0.1.0"
+description = ""
+authors = ["Drew Paettie <cazlo@users.noreply.github.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.115.2"
+uvicorn = "^0.31.1"
+celery = "^5.4.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+#[tool.poetry.scripts] todo these go to dockerfile cmd
+#start-api = "uvicorn tailored_resume_assistant_backend.main:app --reload"
+#start-prod = "uvicorn tailored_resume_assistant_backend.main:app --workers=8"
