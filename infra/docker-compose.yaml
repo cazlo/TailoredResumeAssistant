@@ -76,9 +76,15 @@ services:
       - "/dev/dri/renderD128:/dev/dri/renderD128:rwm"
       - "${CARD_NUMBER:-card1}:${CARD_NUMBER:-card1}:rwm"
     tty: true
+#    entrypoint:
+#      -  /bin/bash
 #    command:
-#      - /bin/bash
-    user: "ubuntu"
+#      - /bin/sh
+#    user: "ubuntu"
+    ipc: host # todo may not be needed
+    shm_size: 8GB
+    cap_add:
+      - SYS_PTRACE
 #    privileged: true
 #    group_add:
 #      - daemon
@@ -91,6 +97,10 @@ services:
 #      - ${RENDER_GROUP_NUMBER:-2}
     security_opt:
       - seccomp=unconfined
+    volumes:
+      - ./data:/data
+    environment:
+      HUGGINGFACE_HUB_CACHE: /data
 
   gpu-setup-smokecheck:
     extends:
