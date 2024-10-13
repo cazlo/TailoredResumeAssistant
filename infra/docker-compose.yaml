@@ -10,6 +10,8 @@ services:
       ["poetry", "run", "uvicorn", "tailored_resume_assistant_backend.main:app", "--workers", "8", "--host", "0.0.0.0"]
     ports:
       - 8042:8000
+    depends_on:
+      - task-db
   backend-queue-worker:
     build:
       context: ../
