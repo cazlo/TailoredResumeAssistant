@@ -6,19 +6,14 @@ from enum import Enum
 # from fastapi_pagination import Page, add_pagination, paginate todo
 from sqlmodel import SQLModel, create_engine, select, Session, Field
 
+from .model import JobView
+from .tasks import generate_tailored_resume
+
+
 app = FastAPI()
 # add_pagination(app)
 
-class JobStatus(str, Enum):
-    created = 'created'
-    queued = 'queued'
-    in_progress = 'in_progress'
-    success = 'success'
-    error = 'error'
 
-class JobView(SQLModel, table=True):
-    id: str = Field(default=None, primary_key=True)
-    status: JobStatus = JobStatus.created
 
 
 db_url = f"postgresql://postgres:password@task-db/postgres"
@@ -44,14 +39,18 @@ async def root():
 
 @app.get("/jobs")
 async def resume_generation_jobs_listing(session: Session = Depends(get_session)) -> list[JobView]:
-    # todo real model with pydantic
     jobs = session.exec(select(JobView).offset(0).limit(100)).all()
     return jobs
 
 
 @app.post("/jobs")
 def create_resume_generation_job(job: JobView, session: Session = Depends(get_session)) -> JobView:
-    session.add(job)
-    session.commit()
-    session.refresh(job)
-    return job
+    try:
+        session.add(job)
+        task = generate_tailored_resume.delay(job.model_dump_json())
+        session.commit()
+        session.refresh(job)
+        return job  # todo something better here probably some metadata from task
+    except Exception as e:
+        session.rollback()
+        raise e
