@@ -38,3 +38,60 @@ services:
     ports:
       - 8842:80
 
+  ####  GL accelerated runtimes
+  mesa-gl-default-docker:
+    image: cazlo/tailored-resume-assistant-llm:latest
+    profiles:
+      - template
+    build:
+      context: ..
+      dockerfile: infra/amdgpu-llm.Dockerfile
+      target: gpu-setup-smokecheck
+    devices:
+      - "/dev/kfd:/dev/kfd:rwm"
+      - "/dev/dri/renderD128:/dev/dri/renderD128:rwm"
+      - "${CARD_NUMBER:-card1}:${CARD_NUMBER:-card1}:rwm"
+    tty: true
+    command:
+      - /bin/bash
+#    user: "1000:1000"
+    group_add:
+      - video
+      - render
+      - ${VIDEO_GROUP_NUMBER:-1}
+      - ${RENDER_GROUP_NUMBER:-2}
+
+  # note: this is intended to only be used when in the docker "rootless" context
+  # not the "default" context, which is root-full
+  mesa-gl-rootless-docker:
+    image: cazlo/tailored-resume-assistant-llm:latest
+    profiles:
+      - template
+    build:
+      context: ..
+      dockerfile: infra/amdgpu-llm.Dockerfile
+      target: gpu-setup-smokecheck
+    devices:
+      - "/dev/kfd:/dev/kfd:rwm"
+      - "/dev/dri/renderD128:/dev/dri/renderD128:rwm"
+      - "${CARD_NUMBER:-card1}:${CARD_NUMBER:-card1}:rwm"
+    tty: true
+#    command:
+#      - /bin/bash
+    user: "ubuntu"
+#    privileged: true
+#    group_add:
+#      - daemon
+#      - 106
+#      - 235
+#      - daemon
+#      - video
+#      - render
+#      - ${VIDEO_GROUP_NUMBER:-1}
+#      - ${RENDER_GROUP_NUMBER:-2}
+    security_opt:
+      - seccomp=unconfined
+
+  gpu-setup-smokecheck:
+    extends:
+      service: mesa-gl-rootless-docker
