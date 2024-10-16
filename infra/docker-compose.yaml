@@ -10,13 +10,18 @@ services:
       ["poetry", "run", "uvicorn", "tailored_resume_assistant_backend.main:app", "--workers", "8", "--host", "0.0.0.0"]
     ports:
       - 8042:8000
+    depends_on:
+      - task-db
   backend-queue-worker:
     build:
       context: ../
       dockerfile: infra/backend.Dockerfile
     image: cazlo/tailored-resume-assistant-backend
     command:
-      "echo 'todo celery worker command goes here'"
+      "poetry run celery -A tailored_resume_assistant_backend.tasks worker --loglevel=info"
+    depends_on:
+      - task-db
+      - task-queue
   task-queue:
     image: rabbitmq:3.13-management
     # note 3.13 selected to align with recommended version for AWS managed mq. see also https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/rabbitmq-version-management.html
